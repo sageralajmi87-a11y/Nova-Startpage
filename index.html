@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Google</title>
+<!-- Google favicon — colorful G in SVG, works everywhere -->
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cpath fill='%234285F4' d='M45.12 24.5c0-1.56-.14-3.06-.4-4.5H24v8.51h11.84c-.51 2.75-2.06 5.08-4.39 6.64v5.52h7.11c4.16-3.83 6.56-9.47 6.56-16.17z'/%3E%3Cpath fill='%2334A853' d='M24 46c5.94 0 10.92-1.97 14.56-5.33l-7.11-5.52c-1.97 1.32-4.49 2.1-7.45 2.1-5.73 0-10.58-3.87-12.31-9.07H4.34v5.7C7.96 41.07 15.4 46 24 46z'/%3E%3Cpath fill='%23FBBC05' d='M11.69 28.18C11.25 26.86 11 25.45 11 24s.25-2.86.69-4.18v-5.7H4.34C2.85 17.09 2 20.45 2 24c0 3.55.85 6.91 2.34 9.88l7.35-5.7z'/%3E%3Cpath fill='%23EA4335' d='M24 10.75c3.23 0 6.13 1.11 8.41 3.29l6.31-6.31C34.91 4.18 29.93 2 24 2 15.4 2 7.96 6.93 4.34 14.12l7.35 5.7c1.73-5.2 6.58-9.07 12.31-9.07z'/%3E%3C/svg%3E">
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
 body { font-family: Arial, sans-serif; font-size:13px; background:#fff; color:#000; }
@@ -376,19 +378,38 @@ No markdown, no code fences.`
   };
 
   try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1500,
-        system: prompts[currentTab] || prompts.web,
-        messages: [{ role: 'user', content: 'Search query: "' + val + '"' }]
-      })
-    });
+    // Use allorigins as CORS proxy to reach Anthropic API
+    const payload = {
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 1500,
+      system: prompts[currentTab] || prompts.web,
+      messages: [{ role: 'user', content: 'Search query: "' + val + '"' }]
+    };
 
-    const data = await response.json();
-    const text = (data.content?.[0]?.text || '').replace(/```json|```/g,'').trim();
+    // Try direct first (works in Claude artifacts), fall back to proxy for GitHub Pages
+    let text = '';
+    try {
+      const direct = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (direct.ok) {
+        const d = await direct.json();
+        text = (d.content?.[0]?.text || '');
+      } else { throw new Error('direct failed'); }
+    } catch(_) {
+      // CORS proxy fallback for GitHub Pages / static hosting
+      const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent('https://api.anthropic.com/v1/messages');
+      const proxied = await fetch(proxyUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-anthropic-version': '2023-06-01' },
+        body: JSON.stringify(payload)
+      });
+      const d = await proxied.json();
+      text = (d.content?.[0]?.text || '');
+    }
+    text = text.replace(/```json|```/g,'').trim();
     let parsed;
     try { parsed = JSON.parse(text); } catch(e) { parsed = null; }
 
