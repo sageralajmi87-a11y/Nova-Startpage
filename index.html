@@ -287,23 +287,61 @@ function generateIndexHTML(sc){
   const destUrl=sc.url;
   const safeName=esc(sc.name);
 
-  return `<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>${safeName}</title>
-<link rel="icon" type="image/svg+xml" href="${favicon}">
-<meta http-equiv="refresh" content="0;url=${esc(destUrl)}">
-<style>
-  *{margin:0;padding:0;box-sizing:border-box;}
-  html,body{height:100%;background:#fff;}
-</style>
-</head>
-<body>
-<script>window.location.replace(${JSON.stringify(destUrl)});<\/script>
-</body>
-</html>`;
+  const parts=[];
+  parts.push('<!DOCTYPE html>');
+  parts.push('<html lang="en"><head>');
+  parts.push('<meta charset="UTF-8">');
+  parts.push('<meta name="viewport" content="width=device-width,initial-scale=1.0">');
+  parts.push('<title>'+safeName+'</title>');
+  parts.push('<link rel="icon" type="image/svg+xml" href="'+favicon+'">');
+  parts.push('<style>');
+  parts.push('*{margin:0;padding:0;box-sizing:border-box;}');
+  parts.push('html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f8f9fa;}');
+  parts.push('#page{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem 1.5rem;}');
+  parts.push('#loading{display:none;position:fixed;inset:0;background:#fff;z-index:9999;}');
+  parts.push('.box{background:#fff;border-radius:20px;box-shadow:0 2px 8px rgba(0,0,0,0.08),0 8px 32px rgba(0,0,0,0.08);padding:2rem;max-width:400px;width:100%;margin-bottom:1.25rem;}');
+  parts.push('.title{font-size:11px;font-weight:600;color:#5f6368;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:1.25rem;}');
+  parts.push('.step{display:flex;gap:14px;align-items:flex-start;margin-bottom:1rem;}');
+  parts.push('.step:last-child{margin-bottom:0;}');
+  parts.push('.num{width:28px;height:28px;border-radius:50%;background:#1a73e8;color:#fff;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;}');
+  parts.push('.txt{font-size:14px;color:#3c4043;line-height:1.6;padding-top:3px;}');
+  parts.push('.txt strong{color:#202124;}');
+  parts.push('.tag{display:inline-block;background:#e8f0fe;color:#1a73e8;border-radius:4px;padding:1px 7px;font-size:12px;font-weight:600;}');
+  parts.push('.hr{height:1px;background:#f1f3f4;margin:0.85rem 0;}');
+  parts.push('.done-box{background:#1a73e8;border-radius:20px;padding:1.5rem 2rem;max-width:400px;width:100%;text-align:center;}');
+  parts.push('.done-title{font-size:15px;font-weight:700;color:#fff;margin-bottom:0.35rem;}');
+  parts.push('.done-sub{font-size:13px;color:rgba(255,255,255,0.75);margin-bottom:1.1rem;}');
+  parts.push('.go-btn{width:100%;background:#fff;color:#1a73e8;border:none;border-radius:10px;font-size:15px;font-weight:700;padding:0.75rem;cursor:pointer;font-family:inherit;transition:opacity 0.15s;}');
+  parts.push('.go-btn:hover{opacity:0.9;}');
+  parts.push('.skip{font-size:12px;color:rgba(255,255,255,0.55);margin-top:0.6rem;}');
+  parts.push('.skip a{color:rgba(255,255,255,0.8);text-decoration:underline;}');
+  parts.push('</style></head><body>');
+  parts.push('<div id="page">');
+  parts.push('<div class="box">');
+  parts.push('<p class="title">Add to shelf first</p>');
+  parts.push('<div class="step"><div class="num">1</div><p class="txt">Click the <strong>three-dot menu ⋮</strong> in the top-right corner of Chrome.</p></div>');
+  parts.push('<div class="hr"></div>');
+  parts.push('<div class="step"><div class="num">2</div><p class="txt">Hover <span class="tag">More tools</span> → click <span class="tag">Add to shelf</span>.</p></div>');
+  parts.push('<div class="hr"></div>');
+  parts.push('<div class="step"><div class="num">3</div><p class="txt">Click <span class="tag">Add</span> in the dialog. Done — <strong>'+safeName+'</strong> is on your shelf!</p></div>');
+  parts.push('</div>');
+  parts.push('<div class="done-box">');
+  parts.push('<p class="done-title">All done adding it?</p>');
+  parts.push('<p class="done-sub">Click below to open '+safeName+'. Next time just use the shelf icon.</p>');
+  parts.push('<button class="go-btn" onclick="goNow()">Open '+safeName+' \u2192</button>');
+  parts.push('<p class="skip">Skipping? <a href="'+esc(destUrl)+'">Go directly</a></p>');
+  parts.push('</div>');
+  parts.push('</div>');
+  parts.push('<div id="loading"></div>');
+  parts.push('<script>');
+  parts.push('function goNow(){');
+  parts.push('  document.getElementById("page").style.display="none";');
+  parts.push('  document.getElementById("loading").style.display="block";');
+  parts.push('  setTimeout(function(){window.location.replace('+JSON.stringify(destUrl)+');},400);');
+  parts.push('}');
+  parts.push('<\/script>');
+  parts.push('</body></html>');
+  return parts.join('\n');
 }
 
 document.getElementById('add-btn').onclick=()=>{
