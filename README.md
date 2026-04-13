@@ -1,5 +1,5 @@
-# NEXUS
+# Flappy Bird
 
-A search engine
+Flappy Bird. Restored.
 
-Visit: https://sageralajmi87-a11y.github.io/Nexus-Startpage
+Visit: https://sageralajmi87-a11y.github.io/Flappy-Bird
